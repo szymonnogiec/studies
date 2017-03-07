@@ -46,7 +46,7 @@ bool RSA::decode()
     bool writeSuccessful = fileReader_.writeToOutput (decodedMsg);
     if (writeSuccessful)
     {
-        std::cout << std::string ("*", 50) << std::endl;
+        std::cout << std::string (50, '*') << std::endl;
         std::cout << "Decoded digits has been "
                 "successfully written to output file " <<
                   fileReader_.getOutputFilename() << std::endl;
@@ -66,7 +66,7 @@ bool RSA::encode()
     bool writeSuccessful = fileReader_.writeToOutput (encodedChars);
     if (writeSuccessful)
     {
-        std::cout << std::string ("*", 50) << std::endl;
+        std::cout << std::string (50, '*') << std::endl;
         std::cout << "Encoded digits has been "
         "successfully written to output file " <<
                   fileReader_.getOutputFilename() << std::endl;
@@ -82,41 +82,44 @@ int RSA::encodeChar(char c)
 
     fileReader_.writeToHelperOutput (charDigit);
 
-    //casting to double for std::pow function
-    double charDigitDb = static_cast<double>(charDigit);
-    double eDb = static_cast<double>(publicKeyParams.first);
-    long long power = static_cast<long long>(std::pow (charDigitDb, eDb));
-    int result = static_cast<int> (power % publicKeyParams.second);
-
+    double power = static_cast<double>(publicKeyParams.first);
+    double base = static_cast<double>(charDigit);
+    long long le = static_cast<long long>(std::pow (base, power));
+    int result = le % publicKeyParams.second;
     return result;
 }
 
 char RSA::decodeChar (int number)
 {
-    int decodedNumber = calculatePowerMod (number, privateKeyParams.first,
+    int cd = calculatePowerMod (number, privateKeyParams.first,
     privateKeyParams.second);
+    int decodedNumber = cd % privateKeyParams.second;
     //move
 
     if (decodedNumber == 0)
         return char (' ');
+
     decodedNumber += charsMovement_;
     return static_cast<char>(decodedNumber);
 }
 
-int RSA::calculatePowerMod(int c, int d, int n)
+long long RSA::calculatePowerMod(int c, int d, int n)
 {
     if (d == 1)
         return c;
+
     int rest = d % 2;
     if (rest == 0)
     {
-        long newBase = static_cast<long>(std::sqrt (c)) % n;
-        return newBase * calculatePowerMod (c, d/2, n);
+        int newBase = static_cast<int>(std::sqrt (c)) % n;
+        int newD = d/2;
+        return calculatePowerMod (newBase, newD, n);
     }
     else
     {
-        long newBase = static_cast<long>(std::sqrt(c)) % n;
-        newBase *= c;
-        return newBase * calculatePowerMod (c, (d/2) - 1, n);
+        int newBase = static_cast<int>(std::sqrt(c)) % n;
+        int newD = (d-1)/2;
+
+        return c * calculatePowerMod (newBase, newD, n);
     }
 }

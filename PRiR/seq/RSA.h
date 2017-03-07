@@ -27,8 +27,8 @@ private:
     int toNumber (char c);
     int encodeChar (char c);
     char decodeChar (int number);
-    int calculatePowerMod (int c, int d, int n);
-    long long calculatePowerRecursively (long long base, int power);
+    long long calculatePowerMod (int c, int d, int n);
+
     //private keys parameters
     const std::pair<int, int> publicKeyParams;
     const std::pair<int, int> privateKeyParams;
