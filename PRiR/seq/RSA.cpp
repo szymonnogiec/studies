@@ -5,8 +5,8 @@
 #include <iostream>
 #include "RSA.h"
 
-RSA::RSA(FileReader& fileReader) : publicKeyParams (std::make_pair(11, 899)),
-             privateKeyParams (std::make_pair(611, 899)),
+RSA::RSA(FileReader& fileReader) : publicKeyParams (std::make_pair(11, 6721)),
+             privateKeyParams (std::make_pair(611, 6721)),
                                    fileReader_ (fileReader),
                                    charsMovement_ (96)
 {
@@ -82,10 +82,12 @@ int RSA::encodeChar(char c)
 
     fileReader_.writeToHelperOutput (charDigit);
 
-    double power = static_cast<double>(publicKeyParams.first);
+    int result = calculatePowerMod(charDigit, publicKeyParams.first,
+    publicKeyParams.second);
+    /*double power = static_cast<double>(publicKeyParams.first);
     double base = static_cast<double>(charDigit);
     long long le = static_cast<long long>(std::pow (base, power));
-    int result = le % publicKeyParams.second;
+    int result = le % publicKeyParams.second;*/
     return result;
 }
 
