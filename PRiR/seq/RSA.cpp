@@ -5,8 +5,8 @@
 #include <iostream>
 #include "RSA.h"
 
-RSA::RSA(FileReader& fileReader) : publicKeyParams (std::make_pair(11, 6721)),
-             privateKeyParams (std::make_pair(611, 6721)),
+RSA::RSA(FileReader& fileReader) : publicKeyParams (std::make_pair(11, 899)),
+             privateKeyParams (std::make_pair(611, 899)),
                                    fileReader_ (fileReader),
                                    charsMovement_ (96)
 {
@@ -82,19 +82,20 @@ int RSA::encodeChar(char c)
 
     fileReader_.writeToHelperOutput (charDigit);
 
-    int c = calculatePowerMod(charDigit, publicKeyParams.first,
-    publicKeyParams.second);
-    /*double power = static_cast<double>(publicKeyParams.first);
+    // int le = calculatePowerMod(charDigit, publicKeyParams.first,
+    // publicKeyParams.second);
+
+    double power = static_cast<double>(publicKeyParams.first);
     double base = static_cast<double>(charDigit);
     long long le = static_cast<long long>(std::pow (base, power));
-    int result = le % publicKeyParams.second;*/
-	int result = c % publicKeyParams.second;
+    int result = le % publicKeyParams.second;
+	//int result = le % publicKeyParams.second;
     return result;
 }
 
 char RSA::decodeChar (int number)
 {
-    int cd = calculatePowerMod (number, privateKeyParams.first,
+    long long cd = calculatePowerMod (number, privateKeyParams.first,
     privateKeyParams.second);
     int decodedNumber = cd % privateKeyParams.second;
     //move
@@ -103,6 +104,7 @@ char RSA::decodeChar (int number)
         return char (' ');
 
     decodedNumber += charsMovement_;
+
     return static_cast<char>(decodedNumber);
 }
 
@@ -111,16 +113,19 @@ long long RSA::calculatePowerMod(int c, int d, int n)
     if (d == 1)
         return c;
 
+    double base = static_cast<double>(c);
+    double exp = 2.0;
+
     int rest = d % 2;
     if (rest == 0)
     {
-        int newBase = static_cast<int>(std::sqrt (c)) % n;
+        int newBase = static_cast<int>(std::pow (base, exp)) % n;
         int newD = d/2;
         return calculatePowerMod (newBase, newD, n);
     }
     else
     {
-        int newBase = static_cast<int>(std::sqrt(c)) % n;
+        int newBase = static_cast<int>(std::pow (base, exp)) % n;
         int newD = (d-1)/2;
 
         return c * calculatePowerMod (newBase, newD, n);
