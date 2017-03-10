@@ -82,12 +82,13 @@ int RSA::encodeChar(char c)
 
     fileReader_.writeToHelperOutput (charDigit);
 
-    int result = calculatePowerMod(charDigit, publicKeyParams.first,
+    int c = calculatePowerMod(charDigit, publicKeyParams.first,
     publicKeyParams.second);
     /*double power = static_cast<double>(publicKeyParams.first);
     double base = static_cast<double>(charDigit);
     long long le = static_cast<long long>(std::pow (base, power));
     int result = le % publicKeyParams.second;*/
+	int result = c % publicKeyParams.second;
     return result;
 }
 
