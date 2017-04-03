@@ -1,0 +1,1 @@
+/usr/bin/c++   -g   CMakeFiles/mp.dir/main.cpp.o CMakeFiles/mp.dir/FileReader.cpp.o CMakeFiles/mp.dir/RSA.cpp.o  -o mp 

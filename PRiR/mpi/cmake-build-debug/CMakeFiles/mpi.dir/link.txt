@@ -1,0 +1,1 @@
+/usr/bin/c++   -g   -Wl,-Bsymbolic-functions  -Wl,-z,relro CMakeFiles/mpi.dir/main.cpp.o CMakeFiles/mpi.dir/FileReader.cpp.o CMakeFiles/mpi.dir/RSA.cpp.o  -o mpi /usr/lib/x86_64-linux-gnu/libmpichcxx.so /usr/lib/x86_64-linux-gnu/libmpich.so 
