@@ -24,9 +24,9 @@ bool encode (std::string msg)
 }
 int main(int argc, char* argv [])
 {
-    MPI_Init(&argc, &argv);
+    MPI_Init(nullptr, nullptr);
 
-    if (argc != 5)
+    if (argc != 4)
     {
         printUsage();
         return -1;
@@ -34,7 +34,6 @@ int main(int argc, char* argv [])
     std::string inputFile = std::string (argv[1]);
     std::string outputFile = std::string (argv [2]);
     std::string encodeParam = argv [3];
-    int numberOfThreads = std::atoi(argv [4]);
     if (encodeParam.size() != 1)
     {
         printUsage();

@@ -32,7 +32,7 @@ int RSA::toNumber(char c)
     return (lower - charsMovement_);
 }
 
-bool RSA::decode()
+void RSA::decode()
 {
     fileReader_.readInput();
     std::vector<int> encodedNumbers =
@@ -40,56 +40,178 @@ bool RSA::decode()
     int msgToDecodeSize = encodedNumbers.size();
     std::string decodedMsg (msgToDecodeSize, ' ');
 
+
+    //MPI data
+    int mynum, nprocs;
+    MPI_Comm_rank(MPI_COMM_WORLD, &mynum);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
     char decodedChar;
     int intTaken;
     int i;
+    MPI_Status status;
+    int type = 2;
+    int source = 0;
+    int bufferedInt;
 
-    for (i = 0; i < msgToDecodeSize; ++i)
+    for (i = 0; i < msgToDecodeSize; i += nprocs)
     {
-        intTaken = encodedNumbers.at (i);
-        decodedChar = decodeChar (intTaken);
-        decodedMsg.at(i) = decodedChar;
+        printf("Processor %d: Iteration number %d \n", mynum, i);
+        if (mynum == 0)
+        {
+            printf("Taking digit number %d\n", i);
+            intTaken = encodedNumbers.at(i);
+            for (int j = 1; j < nprocs; ++j)
+            {
+                printf("Processor %d: Iterating through processors; iteration %d\n", mynum, j);
+                if (i+j >= msgToDecodeSize)
+                    break;
+
+                printf("Taking digit number %d\n", i+j);
+                bufferedInt = encodedNumbers.at(i+j);
+                printf("Processor %d: Sending int %d to processor %d\n", mynum, bufferedInt, j);
+                MPI_Send (&bufferedInt, 1, MPI_INT, j, type, MPI_COMM_WORLD);
+            }
+            printf("Processor %d: Decoding digit %d \n", mynum, intTaken);
+            decodedChar = decodeChar(intTaken);
+            printf("Putting char number %d\n", i);
+            decodedMsg.at(i) = decodedChar;
+        }
+        else
+        {
+            if (mynum + i >= msgToDecodeSize)
+            {
+                printf("Breaking loop in processor %d", mynum);
+                break;
+            }
+
+            MPI_Recv(&bufferedInt, 1, MPI_INT, source, type, MPI_COMM_WORLD, &status);
+
+            printf("Processor %d: Received digit %d to processor %d\n", mynum, bufferedInt, mynum);
+            decodedChar = decodeChar (bufferedInt);
+            MPI_Send(&decodedChar, 1, MPI_CHAR, 0, type, MPI_COMM_WORLD);
+        }
+
+        if (mynum == 0)
+        {
+            for (int j = 1; j < nprocs; ++j)
+            {
+                char bufferedDecodedChar;
+                if (i+j >= msgToDecodeSize)
+                    break;
+                MPI_Recv(&bufferedDecodedChar, 1, MPI_CHAR, j, type, MPI_COMM_WORLD, &status);
+                printf("Processor %d: Received decoded char %c\n", mynum, bufferedDecodedChar);
+                printf("Processor %d: i = %d, j = %d\n", mynum, i, j);
+                printf("Putting decoded char number %d\n", i+j);
+                decodedMsg.at(i+j) = bufferedDecodedChar;
+            }
+        }
     }
 
-    bool writeSuccessful = fileReader_.writeToOutput (decodedMsg);
-    if (writeSuccessful)
+    if (mynum == 0)
     {
-        std::cout << std::string (50, '*') << std::endl;
-        std::cout << "Decoded digits has been "
-                "successfully written to output file " <<
-                  fileReader_.getOutputFilename() << std::endl;
+        bool writeSuccessful = fileReader_.writeToOutput (decodedMsg);
+        if (writeSuccessful)
+        {
+            std::cout << std::string (50, '*') << std::endl;
+            std::cout << "Decoded digits has been "
+                    "successfully written to output file " <<
+                      fileReader_.getOutputFilename() << std::endl;
+        }
     }
-    return writeSuccessful;
 }
 
-bool RSA::encode()
+void RSA::encode()
 {
     fileReader_.readInput();
     std::string msgToEncode = fileReader_.getInputMsg();
 
+    //MPI data
+    int mynum, nprocs;
+    MPI_Comm_rank(MPI_COMM_WORLD, &mynum);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    printf("Number of processors %d\n", nprocs);
+    printf ("My rank %d\n", mynum);
+
+    //data for calculations
     int msgToEncodeSize = msgToEncode.size();
     int encodedChar;
     int charTaken;
     int i;
+    MPI_Status status;
+    int type = 2;
+    int source = 0;
 
     std::vector<int> encodedChars (msgToEncodeSize);
 
-    for (i = 0; i < msgToEncodeSize; i ++) {
-        charTaken = msgToEncode[i];
-        encodedChar = encodeChar(charTaken);
-        encodedChars.at(i) = encodedChar;
+    char bufferedChar;
+    for (i = 0; i < msgToEncodeSize; i += nprocs) {
+
+        printf("Processor %d: Iteration number %d \n", mynum, i);
+        if (mynum == 0)
+        {
+            printf("Taking char number %d\n", i);
+            charTaken = msgToEncode.at(i);
+            for (int j = 1; j < nprocs; ++j)
+            {
+                printf("Processor %d: Iterating through processors; iteration %d\n", mynum, j);
+                if (i+j >= msgToEncodeSize)
+                    break;
+
+                printf("Taking char number %d\n", i+j);
+                bufferedChar = msgToEncode.at(i+j);
+                printf("Processor %d: Sending char %c to processor %d\n", mynum, bufferedChar, j);
+                MPI_Send (&bufferedChar, 1, MPI_CHAR, j, type, MPI_COMM_WORLD);
+            }
+            printf("Processor %d: Encoding char %c \n", mynum, charTaken);
+            encodedChar = encodeChar(charTaken);
+            printf("Putting char number %d\n", i);
+            encodedChars.at(i) = encodedChar;
+        }
+        else
+        {
+            if (mynum + i >= msgToEncodeSize)
+            {
+                printf("Breaking loop in processor %d", mynum);
+                break;
+            }
+
+            MPI_Recv(&bufferedChar, 1, MPI_CHAR, source, type, MPI_COMM_WORLD, &status);
+
+            printf("Processor %d: Received char %c to processor %d\n", mynum, bufferedChar, mynum);
+            encodedChar = encodeChar(bufferedChar);
+            MPI_Send(&encodedChar, 1, MPI_INT, 0, type, MPI_COMM_WORLD);
+        }
+
+        if (mynum == 0)
+        {
+            for (int j = 1; j < nprocs; ++j)
+            {
+                int bufferedEncodedChar;
+                if (i+j >= msgToEncodeSize)
+                    break;
+                MPI_Recv(&bufferedEncodedChar, 1, MPI_INT, j, type, MPI_COMM_WORLD, &status);
+                printf("Processor %d: Received encoded digit %d\n", mynum, bufferedEncodedChar);
+                printf("Processor %d: i = %d, j = %d\n", mynum, i, j);
+                printf("Putting encoded char number %d\n", i+j);
+                encodedChars.at(i+j) = bufferedEncodedChar;
+            }
+        }
     }
 
-
-    bool writeSuccessful = fileReader_.writeToOutput (encodedChars);
-    if (writeSuccessful)
+    if (mynum == 0)
     {
-        std::cout << std::string (50, '*') << std::endl;
-        std::cout << "Encoded digits has been "
-        "successfully written to output file " <<
-                  fileReader_.getOutputFilename() << std::endl;
+        bool writeSuccessful = fileReader_.writeToOutput (encodedChars);
+        if (writeSuccessful)
+        {
+            std::cout << std::string (50, '*') << std::endl;
+            std::cout << "Encoded digits has been "
+                    "successfully written to output file " <<
+                      fileReader_.getOutputFilename() << std::endl;
+        }
     }
-    return writeSuccessful;
+
 }
 
 int RSA::encodeChar(char c)

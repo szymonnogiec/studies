@@ -15,6 +15,8 @@
 //local includes
 #include "FileReader.h"
 
+//MPI includes
+#include <mpi.h>
 
 
 class RSA
@@ -23,8 +25,8 @@ public:
     RSA (FileReader& fileReader);
     ~RSA();
 
-    bool encode ();
-    bool decode ();
+    void encode ();
+    void decode ();
 private:
     int toNumber (char c);
     int encodeChar (char c);
