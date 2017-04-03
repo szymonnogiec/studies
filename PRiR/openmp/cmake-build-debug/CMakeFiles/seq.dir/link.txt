@@ -1,0 +1,1 @@
+/usr/bin/c++   -g   CMakeFiles/seq.dir/main.cpp.o CMakeFiles/seq.dir/FileReader.cpp.o CMakeFiles/seq.dir/RSA.cpp.o  -o seq 

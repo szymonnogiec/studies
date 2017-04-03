@@ -1,0 +1,10 @@
+./mp input output e 1
+./mp input output e 2
+./mp input output e 4
+./mp input output e 8
+./mp input output e 16
+./mp output input d 1
+./mp output input d 2
+./mp output input d 4
+./mp output input d 8
+./mp output input d 16
