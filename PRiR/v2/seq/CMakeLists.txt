@@ -7,6 +7,5 @@ include_directories(.)
 
 add_executable(seq
         CMakeLists.txt
-        Dictonary.cpp
         Dictonary.h
         main.cpp)
