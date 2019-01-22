@@ -2,10 +2,15 @@
 #include <stdlib.h>
 #include <map>
 #include <iostream>
+#include <chrono>
 
 #include "Dictonary.h"
 
 int main() {
+    MPI_Init(nullptr, nullptr);
+    int mynum, nprocs;
+    MPI_Comm_rank(MPI_COMM_WORLD, &mynum);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     unsigned int seed = time(nullptr);
 
     std::map<int, std::string> items_map;
@@ -38,26 +43,29 @@ int main() {
         words_to_find.push_back(word);
     }
 
-    std::vector<std::pair<std::string, double>> results;
-    std::cout << "----LINEAR SEARCH----" << std::endl;
-    double startTime = omp_get_wtime();
-    dict.find_linear(words_to_find);
-    double endTime = omp_get_wtime();
-    results.emplace_back(std::make_pair("Linear", (endTime - startTime)));
+    std::chrono::high_resolution_clock::time_point start_time;
+    std::chrono::high_resolution_clock::time_point end_time;
+    std::chrono::duration<double> diff;
+//    std::cout << "----LINEAR SEARCH----" << std::endl;
+//    start_time =
+//            std::chrono::high_resolution_clock::now();
+//    dict.find_linear(words_to_find);
+//    end_time =
+//            std::chrono::high_resolution_clock::now();
+//    diff = end_time - start_time;
+//    results.emplace_back(std::make_pair("Linear", diff.count()));
 
-    short threads_num[5] = {1, 2, 4, 8, 16};
-    for (short threads_number : threads_num) {
+    if (mynum == 0) {
         std::cout << "----OPENMP PARALLEL SEARCH----" << std::endl;
-        startTime = omp_get_wtime();
-        omp_set_num_threads(threads_number);
-        dict.find_mp(words_to_find);
-        endTime = omp_get_wtime();
-        results.emplace_back(std::make_pair("omp " + std::to_string(threads_number),
-                                            (endTime - startTime)));
+        start_time = std::chrono::high_resolution_clock::now();
     }
-
-    for (auto &i : results) {
-        std::cout << i.first << " --- " << i.second << std::endl;
+    dict.find_mpi(words_to_find);
+    std::cout << "find mpi done" << std::endl;
+    if (mynum == 0) {
+        end_time = std::chrono::high_resolution_clock::now();
+        diff = end_time - start_time;
+        std::cout << "MPI time took " << diff.count() << " with " << nprocs << " processors." << std::endl;
     }
+    MPI_Finalize();
     return 0;
 }
